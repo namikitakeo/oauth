@@ -1,0 +1,73 @@
+@model myop.Models.Client
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Client</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="ClientId" class="control-label"></label>
+                <input asp-for="ClientId" class="form-control" />
+                <span asp-validation-for="ClientId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ClientSecret" class="control-label"></label>
+                <input asp-for="ClientSecret" class="form-control" />
+                <span asp-validation-for="ClientSecret" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AccessType" class="control-label"></label>
+                <input asp-for="AccessType" class="form-control" />
+                <span asp-validation-for="AccessType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RedirectUris" class="control-label"></label>
+                <input asp-for="RedirectUris" class="form-control" />
+                <span asp-validation-for="RedirectUris" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="GrantTypes" class="control-label"></label>
+                <input asp-for="GrantTypes" class="form-control" />
+                <span asp-validation-for="GrantTypes" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AllowedScope" class="control-label"></label>
+                <input asp-for="AllowedScope" class="form-control" />
+                <span asp-validation-for="AllowedScope" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ClientName" class="control-label"></label>
+                <input asp-for="ClientName" class="form-control" />
+                <span asp-validation-for="ClientName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AuthMethod" class="control-label"></label>
+                <input asp-for="AuthMethod" class="form-control" />
+                <span asp-validation-for="AuthMethod" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Iat" class="control-label"></label>
+                <input asp-for="Iat" class="form-control" value="@DateTime.Now" />
+                <span asp-validation-for="Iat" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

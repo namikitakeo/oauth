@@ -1,0 +1,53 @@
+@model IEnumerable<myop.Models.Code>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CodeId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UserId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Nonce)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Iat)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CodeId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UserId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Nonce)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Iat)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CodeId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CodeId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CodeId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

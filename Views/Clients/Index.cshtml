@@ -1,0 +1,83 @@
+@model IEnumerable<myop.Models.Client>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ClientId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ClientSecret)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AccessType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RedirectUris)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.GrantTypes)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AllowedScope)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ClientName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AuthMethod)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Iat)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientSecret)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AccessType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RedirectUris)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GrantTypes)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AllowedScope)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AuthMethod)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Iat)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ClientId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ClientId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.ClientId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
