@@ -74,7 +74,7 @@ namespace myop.Controllers
                     _context.Tokens.Remove(access_token);
                     await _context.SaveChangesAsync();
                 }
-                access_token = new Token {UserId = User.Identity.Name, AccessToken = random, Scope = SCOPE, Iat=DateTime.Now};
+                access_token = new Token {UserId = User.Identity.Name, AccessToken = random, ClientId = CLIENT_ID, Scope = SCOPE, Iat=DateTime.Now};
                 _context.Add(access_token);
                 param = "#access_token=" + random + "&token_type=bearer" + param;
             } else if (RESPONSE_TYPE == "id_token") {
@@ -96,7 +96,7 @@ namespace myop.Controllers
                     _context.Tokens.Remove(access_token);
                     await _context.SaveChangesAsync();
                 }
-                access_token = new Token {UserId = User.Identity.Name, AccessToken = random, Scope = SCOPE, Iat=DateTime.Now};
+                access_token = new Token {UserId = User.Identity.Name, AccessToken = random, ClientId = CLIENT_ID, Scope = SCOPE, Iat=DateTime.Now};
                 _context.Add(access_token);
                 AT_HASH = Util.GetAtHash(random);
                 var claims = new[] {
