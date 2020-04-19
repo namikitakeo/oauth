@@ -25,6 +25,7 @@ namespace myop.Controllers
         public string id_token { get; set; }
         public string scope { get; set; }
         public string error { get; set; }
+        public string error_description { get; set; }
     }
 
     [Route("op/[controller]")]
@@ -41,28 +42,10 @@ namespace myop.Controllers
         string CODE;
         string REFRESH_TOKEN;
         string NONCE;
-        private bool ByteArraysEqual(byte[] a, byte[] b)
-        {
-            if (a == null && b == null)
-            {
-                return true;
-            }
-            if (a == null || b == null || a.Length != b.Length)
-            {
-                return false;
-            }
-            var areSame = true;
-            for (var i = 0; i < a.Length; i++)
-            {
-                areSame &= (a[i] == b[i]);
-            }
-            return areSame;
-        }
         public TokenController(ApplicationDbContext context)
         {
             _context = context;
         }
-
         // POST: op/token
         [HttpPost]
         public async Task<ActionResult<AccessToken>> doPost()
@@ -85,36 +68,37 @@ namespace myop.Controllers
             }
             var client = await _context.Clients.FindAsync(CLIENT_ID);
             if (client == null) {
-                return new AccessToken {error = "unauthorized_client"};
+                return new AccessToken {error = "unauthorized_client", error_description="client authentication failed."};
             }
             string idtoken = null;
             string random = Guid.NewGuid().ToString("N").ToUpper();
             string refresh = Guid.NewGuid().ToString("N").ToUpper();
             if (GRANT_TYPE == "refresh_token") {
                 if (client.GrantTypes == "implicit" || client.GrantTypes == "client_credentials") {
-                    return new AccessToken {error = "invalid_request"};
+                    return new AccessToken {error = "unsupported_response_type", error_description="the response_type value is not supported."};
                 }
                 var refresh_token = _context.Tokens.FirstOrDefault(r => r.RefreshToken == REFRESH_TOKEN);
                 if (refresh_token == null) {
-                    return new AccessToken {error = "unsupported_response_type"};
+                    return new AccessToken {error = "unsupported_response_type", error_description="the response_type value is not supported."};
                 } else {
+                    if (CLIENT_ID != refresh_token.ClientId) return new AccessToken {error = "invalid_request", error_description = "client_id is not valid."};
                     int unixTimestamp = (int)(DateTime.Now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                     int iat = (int)(refresh_token.Iat.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                     if (unixTimestamp - iat > 3600) {
-                        return new AccessToken {error = "unsupported_response_type"};                        
+                        return new AccessToken {error = "access_denied", error_description="the refresh_token is not valid."};
                     }
                     USERNAME = refresh_token.UserId;
                     SCOPE = refresh_token.Scope;
                 }
             } else {
                 if (client.GrantTypes != GRANT_TYPE) {
-                    return new AccessToken {error = "unsupported_response_type"};
+                    return new AccessToken {error = "unsupported_response_type", error_description="the response_type value is not supported."};
                 }
                 if (client.GrantTypes == "client_credentials") USERNAME="admin";
                 if (client.GrantTypes == "password") {
                     var user = _context.Users.FirstOrDefault(u => u.UserName == USERNAME);
                     if (user == null ) {
-                        return new AccessToken {error = "unsupported_response_type"};
+                        return new AccessToken {error = "access_denied", error_description="user authentication failed."};
                     }
                     byte[] buffer4;
                     byte[] src = Convert.FromBase64String(user.PasswordHash);
@@ -126,59 +110,26 @@ namespace myop.Controllers
                     {
                         buffer4 = bytes.GetBytes(0x20);
                     }
-                    if (!ByteArraysEqual(buffer3, buffer4)) {
-                        return new AccessToken {error = "unsupported_response_type"};
+                    if (!Util.ByteArraysEqual(buffer3, buffer4)) {
+                        return new AccessToken {error = "access_denied", error_description="user authentication failed."};
                     }
                 }
                 if (client.GrantTypes == "authorization_code") {
                     var code = await _context.Codes.FindAsync(CODE);
                     if (code == null) {
-                        return new AccessToken {error = "invalid_request"};
+                        return new AccessToken {error = "invalid_request", error_description="the code is not valid."};
                     }
                     USERNAME=code.UserId;
                     NONCE=code.Nonce;
                     _context.Codes.Remove(code);
                     await _context.SaveChangesAsync();
-                    string[] q =  NONCE.Split('&');
-                    for (int i=0; i<q.Length; i++){
-                        string[] values =  q[i].Split('=');
-                        switch(values[0])
-                        {
-                            case "nonce":NONCE=values[1];break;
-                        }
-                    }
-                    SHA256Managed hashstring = new SHA256Managed();
-                    byte[] bytes = Encoding.Default.GetBytes(random);
-                    byte[] hash = hashstring.ComputeHash(bytes);
-                    Byte[] sixteen_bytes = new Byte[16];
-                    Array.Copy(hash, sixteen_bytes, 16);
+                    if (CLIENT_ID != code.ClientId) return new AccessToken {error = "invalid_request", error_description = "client_id is not valid."};
+                    if (NONCE == null) return new AccessToken {error = "invalid_request", error_description = "nonce is not valid."};
                     var claims = new[] {
                     new Claim(JwtRegisteredClaimNames.Sub, USERNAME),
                     new Claim(JwtRegisteredClaimNames.Nonce, NONCE)
                     };
-                    var pemStr = System.IO.File.ReadAllText(@"./private.pem");
-                    var base64 = pemStr
-                    .Replace("-----BEGIN RSA PRIVATE KEY-----", string.Empty)
-                    .Replace("-----END RSA PRIVATE KEY-----", string.Empty)
-                    .Replace("\r\n", string.Empty)
-                    .Replace("\n", string.Empty);
-                    var der = Convert.FromBase64String(base64);
-                    var rsa = RSA.Create();
-                    rsa.ImportRSAPrivateKey(der, out _);
-                    var key = new RsaSecurityKey(rsa);
-                    key.KeyId = "testkey";
-                    var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
-                    var jwtHeader = new JwtHeader(creds);
-                    var jwtPayload = new JwtPayload(
-                    issuer: "https://raspberry.pi/op",
-                        audience: CLIENT_ID,
-                        claims: claims,
-                        notBefore: DateTime.Now,
-                        expires: DateTime.Now.AddMinutes(600),
-                        issuedAt: DateTime.Now
-                    );
-                    var jwt = new JwtSecurityToken(jwtHeader, jwtPayload);
-                    idtoken = new JwtSecurityTokenHandler().WriteToken(jwt);
+                    idtoken=Util.GetIdToken(claims, CLIENT_ID);
                 }
                 string t="openid";
                 if (SCOPE != null) {
@@ -191,24 +142,24 @@ namespace myop.Controllers
             }
             if (client.AccessType == "confidential") {
                     if (client.ClientSecret != CLIENT_SECRET) {
-                        return new AccessToken {error = "invalid_request"};
+                        return new AccessToken {error = "invalid_request", error_description="client authentication failed."};
                     }
             } else if (client.AccessType == "public") {
                 if (client.GrantTypes == "client_credentials") {
-                    return new AccessToken {error = "invalid_request"};
+                    return new AccessToken {error = "invalid_request", error_description="client authentication failed."};
                 }
                 if (CLIENT_SECRET != null) {
-                    return new AccessToken {error = "invalid_request"};
+                    return new AccessToken {error = "invalid_request", error_description="client authentication failed."};
                 }
             } else {
-                return new AccessToken {error = "invalid_request"};
+                return new AccessToken {error = "invalid_request", error_description="client authentication failed."};
             }
             var token = await _context.Tokens.FindAsync(USERNAME);
             if (token != null) {
                 _context.Tokens.Remove(token);
                 await _context.SaveChangesAsync();
             }
-            token=new Token {UserId = USERNAME, AccessToken = random, RefreshToken=refresh, Scope = SCOPE, Iat=DateTime.Now};
+            token = new Token {UserId = USERNAME, AccessToken = random, ClientId = CLIENT_ID, RefreshToken=refresh, Scope = SCOPE, Iat=DateTime.Now};
             _context.Add(token);
             await _context.SaveChangesAsync();
             if (client.GrantTypes == "client_credentials") return new AccessToken {access_token = random, expires_in=60, token_type="bearer", scope = SCOPE};

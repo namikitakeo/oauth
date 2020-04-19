@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\TANAM\\myop\\myop.csproj": {}
+    "C:\\Users\\TANAM\\oauth\\myop.csproj": {}
   },
   "projects": {
-    "C:\\Users\\TANAM\\myop\\myop.csproj": {
+    "C:\\Users\\TANAM\\oauth\\myop.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\TANAM\\myop\\myop.csproj",
+        "projectUniqueName": "C:\\Users\\TANAM\\oauth\\myop.csproj",
         "projectName": "myop",
-        "projectPath": "C:\\Users\\TANAM\\myop\\myop.csproj",
+        "projectPath": "C:\\Users\\TANAM\\oauth\\myop.csproj",
         "packagesPath": "C:\\Users\\TANAM\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\TANAM\\myop\\obj\\",
+        "outputPath": "C:\\Users\\TANAM\\oauth\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

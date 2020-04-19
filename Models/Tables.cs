@@ -1,13 +1,75 @@
 using System;
+using System.IO;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace myop.Models
 {
+  public static class Util
+  {
+    public static bool ByteArraysEqual(byte[] a, byte[] b)
+    {
+      if (a == null && b == null)
+      {
+        return true;
+      }
+      if (a == null || b == null || a.Length != b.Length)
+      {
+        return false;
+      }
+      var areSame = true;
+      for (var i = 0; i < a.Length; i++)
+      {
+        areSame &= (a[i] == b[i]);
+      }
+      return areSame;
+    }
+    public static string GetAtHash(string random)
+    {
+      SHA256Managed hashstring = new SHA256Managed();
+      byte[] bytes = Encoding.Default.GetBytes(random);
+      byte[] hash = hashstring.ComputeHash(bytes);
+      Byte[] sixteen_bytes = new Byte[16];
+      Array.Copy(hash, sixteen_bytes, 16);
+      return Convert.ToBase64String(sixteen_bytes).Trim('=');
+    }
+
+    public static string GetIdToken(Claim[] claims, string client_id)
+    {
+      var pemStr = System.IO.File.ReadAllText(@"./private.pem");
+      var base64 = pemStr
+      .Replace("-----BEGIN RSA PRIVATE KEY-----", string.Empty)
+      .Replace("-----END RSA PRIVATE KEY-----", string.Empty)
+      .Replace("\r\n", string.Empty)
+      .Replace("\n", string.Empty);
+      var der = Convert.FromBase64String(base64);
+      var rsa = RSA.Create();
+      rsa.ImportRSAPrivateKey(der, out _);
+      var key = new RsaSecurityKey(rsa);
+      key.KeyId = "testkey";
+      var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
+      var jwtHeader = new JwtHeader(creds);
+      var jwtPayload = new JwtPayload(
+      issuer: "https://raspberry.pi/op",
+        audience: client_id,
+        claims: claims,
+        notBefore: DateTime.Now,
+        expires: DateTime.Now.AddMinutes(600),
+        issuedAt: DateTime.Now
+      );
+      var jwt = new JwtSecurityToken(jwtHeader, jwtPayload);
+      return new JwtSecurityTokenHandler().WriteToken(jwt);
+    }
+  }
+
   public class ApplicationDbContext : IdentityDbContext
   {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {}
@@ -59,6 +121,9 @@ namespace myop.Models
     [DisplayName("access_token")]
     public string AccessToken { get; set; }
 
+    [DisplayName("client_id")]
+    public string ClientId { get; set; }
+
     [DisplayName("refresh_token")]
     public string RefreshToken { get; set; }
 
@@ -77,6 +142,9 @@ namespace myop.Models
 
     [DisplayName("user_id")]
     public string UserId { get; set; }
+
+    [DisplayName("client_id")]
+    public string ClientId { get; set; }
 
     [DisplayName("nonce")]
     public string Nonce { get; set; }

@@ -27,7 +27,7 @@ namespace myop.Controllers
         string SCOPE;
         string STATE;
         string NONCE;
-
+        string AT_HASH;
         public AuthController(ApplicationDbContext context)
         {
             _context = context;
@@ -47,24 +47,27 @@ namespace myop.Controllers
 
             var client = await _context.Clients.FindAsync(CLIENT_ID);
             if (client == null) {
-                return Redirect(REDIRECT_URI + "#error=unauthorized_client");
+                return Redirect("#error=unauthorized_client&error_description=client authentication failed.");
             }
             if (client.RedirectUris != System.Web.HttpUtility.UrlDecode(REDIRECT_URI)) {
-                return Redirect(REDIRECT_URI + "#error=invalid_request");
+                return Redirect("#error=invalid_request&error_description=redirect_uri is not valid.");
+            }
+            if (STATE == null) {
+                return Redirect(REDIRECT_URI + "#error=invalid_request&error_description=state is not valid.");
             }
             string random = Guid.NewGuid().ToString("N").ToUpper();
             string refresh = Guid.NewGuid().ToString("N").ToUpper();
             string param = "&state="+STATE;
             if (RESPONSE_TYPE == "code") {
                 if (client.GrantTypes != "authorization_code") {
-                    return Redirect(REDIRECT_URI + "#error=unsupported_response_type");
+                    return Redirect(REDIRECT_URI + "#error=unsupported_response_type&error_description=the response_type value is not supported.");
                 }
-                var code = new Code {CodeId = random, UserId = User.Identity.Name, Nonce =HttpContext.Request.QueryString.Value.Substring(1), Iat=DateTime.Now};
+                var code = new Code {CodeId = random, UserId = User.Identity.Name, ClientId = CLIENT_ID, Nonce = NONCE, Iat=DateTime.Now};
                 _context.Add(code);
                 param = "?code=" + random + param;
             } else if (RESPONSE_TYPE == "token") {
                 if (client.GrantTypes != "implicit") {
-                    return Redirect(REDIRECT_URI + "#error=unsupported_response_type");
+                    return Redirect(REDIRECT_URI + "#error=unsupported_response_type&error_description=the response_type value is not supported.");
                 }
                 var access_token = await _context.Tokens.FindAsync(User.Identity.Name);
                 if (access_token != null) {
@@ -76,39 +79,17 @@ namespace myop.Controllers
                 param = "#access_token=" + random + "&token_type=bearer" + param;
             } else if (RESPONSE_TYPE == "id_token") {
                 if (client.GrantTypes != "implicit") {
-                    return Redirect(REDIRECT_URI + "#error=unsupported_response_type");
+                    return Redirect(REDIRECT_URI + "#error=unsupported_response_type&error_description=the response_type value is not supported.");
                 }
                 var claims = new[] {
                 new Claim(JwtRegisteredClaimNames.Sub, User.Identity.Name),
                 new Claim(JwtRegisteredClaimNames.Nonce, NONCE)
                 };
-                var pemStr = System.IO.File.ReadAllText(@"./private.pem");
-                var base64 = pemStr
-                .Replace("-----BEGIN RSA PRIVATE KEY-----", string.Empty)
-                .Replace("-----END RSA PRIVATE KEY-----", string.Empty)
-                .Replace("\r\n", string.Empty)
-                .Replace("\n", string.Empty);
-                var der = Convert.FromBase64String(base64);
-                var rsa = RSA.Create();
-                rsa.ImportRSAPrivateKey(der, out _);
-                var key = new RsaSecurityKey(rsa);
-                key.KeyId = "testkey";
-                var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
-                var jwtHeader = new JwtHeader(creds);
-                var jwtPayload = new JwtPayload(
-                    issuer: "https://raspberry.pi/op",
-                    audience: CLIENT_ID,
-                    claims: claims,
-                    notBefore: DateTime.Now,
-                    expires: DateTime.Now.AddMinutes(600),
-                    issuedAt: DateTime.Now
-                );
-                var jwt = new JwtSecurityToken(jwtHeader, jwtPayload);
-                var id_token = new JwtSecurityTokenHandler().WriteToken(jwt);
+                var id_token = Util.GetIdToken(claims, CLIENT_ID);
                 param = "#id_token=" + id_token + param;
             } else if (RESPONSE_TYPE == "token id_token" || RESPONSE_TYPE == "id_token token") {
                 if (client.GrantTypes != "implicit") {
-                    return Redirect(REDIRECT_URI + "#error=unsupported_response_type");
+                    return Redirect(REDIRECT_URI + "#error=unsupported_response_type&error_description=the response_type value is not supported.");
                 }
                 var access_token = await _context.Tokens.FindAsync(User.Identity.Name);
                 if (access_token != null) {
@@ -117,42 +98,16 @@ namespace myop.Controllers
                 }
                 access_token = new Token {UserId = User.Identity.Name, AccessToken = random, Scope = SCOPE, Iat=DateTime.Now};
                 _context.Add(access_token);
-                SHA256Managed hashstring = new SHA256Managed();
-                byte[] bytes = Encoding.Default.GetBytes(random);
-                byte[] hash = hashstring.ComputeHash(bytes);
-                Byte[] sixteen_bytes = new Byte[16];
-                Array.Copy(hash, sixteen_bytes, 16);
+                AT_HASH = Util.GetAtHash(random);
                 var claims = new[] {
                 new Claim(JwtRegisteredClaimNames.Sub, User.Identity.Name),
-                new Claim(JwtRegisteredClaimNames.AtHash, Convert.ToBase64String(sixteen_bytes).Trim('=')),
+                new Claim(JwtRegisteredClaimNames.AtHash, AT_HASH),
                 new Claim(JwtRegisteredClaimNames.Nonce, NONCE)
                 };
-                var pemStr = System.IO.File.ReadAllText(@"./private.pem");
-                var base64 = pemStr
-                .Replace("-----BEGIN RSA PRIVATE KEY-----", string.Empty)
-                .Replace("-----END RSA PRIVATE KEY-----", string.Empty)
-                .Replace("\r\n", string.Empty)
-                .Replace("\n", string.Empty);
-                var der = Convert.FromBase64String(base64);
-                var rsa = RSA.Create();
-                rsa.ImportRSAPrivateKey(der, out _);
-                var key = new RsaSecurityKey(rsa);
-                key.KeyId = "testkey";
-                var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
-                var jwtHeader = new JwtHeader(creds);
-                var jwtPayload = new JwtPayload(
-                    issuer: "https://raspberry.pi/op",
-                    audience: CLIENT_ID,
-                    claims: claims,
-                    notBefore: DateTime.Now,
-                    expires: DateTime.Now.AddMinutes(600),
-                    issuedAt: DateTime.Now
-                );
-                var jwt = new JwtSecurityToken(jwtHeader, jwtPayload);
-                var id_token = new JwtSecurityTokenHandler().WriteToken(jwt);
+                var id_token = Util.GetIdToken(claims, CLIENT_ID);
                 param = "#access_token=" + random + "&token_type=bearer&id_token=" + id_token + param;
             } else {
-                return Redirect(REDIRECT_URI + "#error=unsupported_response_type");
+                return Redirect(REDIRECT_URI + "#error=unsupported_response_type&error_description=the response_type value is not supported.");
             }
             await _context.SaveChangesAsync();
             return Redirect(REDIRECT_URI + param);

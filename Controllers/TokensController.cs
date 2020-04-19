@@ -53,7 +53,7 @@ namespace myop.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserId,AccessToken,RefreshToken,Scope,Iat")] Token token)
+        public async Task<IActionResult> Create([Bind("UserId,AccessToken,ClientId,RefreshToken,Scope,Iat")] Token token)
         {
             if (ModelState.IsValid)
             {
@@ -85,7 +85,7 @@ namespace myop.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("UserId,AccessToken,RefreshToken,Scope,Iat")] Token token)
+        public async Task<IActionResult> Edit(string id, [Bind("UserId,AccessToken,ClientId,RefreshToken,Scope,Iat")] Token token)
         {
             if (id != token.UserId)
             {

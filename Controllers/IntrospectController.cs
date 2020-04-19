@@ -70,14 +70,21 @@ namespace myop.Controllers
             bool ACTIVE = false;
             var token = await _context.Tokens.FirstOrDefaultAsync(e => e.AccessToken == TOKEN);
             if (token != null) {
-                SCOPE = token.Scope;
-                SUB = token.UserId;
-                int unixTimestamp = (int)(DateTime.Now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                IAT = (int)(token.Iat.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                if (unixTimestamp - IAT < 60) ACTIVE = true;
+                if (CLIENT_ID == token.ClientId) {
+                    SCOPE = token.Scope;
+                    SUB = token.UserId;
+                    int unixTimestamp = (int)(DateTime.Now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                    IAT = (int)(token.Iat.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                    if (unixTimestamp - IAT < 60) ACTIVE = true;
+                } else {
+                    IAT=0;
+                }
             }
-            if (IAT==0) return new Introspect {active = ACTIVE, iss = ISS};
-            else return new Introspect {active = ACTIVE, scope = SCOPE, exp = IAT + 60, iat = IAT, sub = SUB, aud = AUD, iss = ISS};
+            if (IAT==0) {
+                return new Introspect {active = ACTIVE, iss = ISS};
+            } else {
+                return new Introspect {active = ACTIVE, scope = SCOPE, exp = IAT + 60, iat = IAT, sub = SUB, aud = AUD, iss = ISS};
+            }
         }
     }
 }

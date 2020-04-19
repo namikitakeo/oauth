@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using myop.Models;
 
 namespace myop.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class myopContextModelSnapshot : ModelSnapshot
+    [Migration("20200419083307_Code")]
+    partial class Code
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -274,9 +276,6 @@ namespace myop.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("AccessToken")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ClientId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("Iat")
