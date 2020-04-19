@@ -94,7 +94,10 @@ namespace myop.Controllers
                 if (client.GrantTypes != GRANT_TYPE) {
                     return new AccessToken {error = "unsupported_response_type", error_description="the response_type value is not supported."};
                 }
-                if (client.GrantTypes == "client_credentials") USERNAME="admin";
+                if (client.GrantTypes == "client_credentials") {
+                    USERNAME = "admin";
+                    refresh = null;
+                }
                 if (client.GrantTypes == "password") {
                     var user = _context.Users.FirstOrDefault(u => u.UserName == USERNAME);
                     if (user == null ) {
@@ -162,8 +165,11 @@ namespace myop.Controllers
             token = new Token {UserId = USERNAME, AccessToken = random, ClientId = CLIENT_ID, RefreshToken=refresh, Scope = SCOPE, Iat=DateTime.Now};
             _context.Add(token);
             await _context.SaveChangesAsync();
-            if (client.GrantTypes == "client_credentials") return new AccessToken {access_token = random, expires_in=60, token_type="bearer", scope = SCOPE};
-            else return new AccessToken {access_token = random, expires_in=60, refresh_token = refresh, refresh_token_expires_in= 3600, id_token = idtoken, token_type="bearer", scope = SCOPE};
+            if (client.GrantTypes == "client_credentials") {
+                return new AccessToken {access_token = random, expires_in=60, token_type="bearer", scope = SCOPE};
+            } else {
+                return new AccessToken {access_token = random, expires_in=60, refresh_token = refresh, refresh_token_expires_in= 3600, id_token = idtoken, token_type="bearer", scope = SCOPE};
+            }
         }
     }
 }
