@@ -32,6 +32,22 @@ namespace myop.Models
       }
       return areSame;
     }
+
+    public static bool PasswordEqual(string PasswordHash, string Password)
+    {
+      byte[] buffer4;
+      byte[] src = Convert.FromBase64String(PasswordHash);
+      byte[] dst = new byte[0x10];
+      Buffer.BlockCopy(src, 0x0D, dst, 0, 0x10);
+      byte[] buffer3 = new byte[0x20];
+      Buffer.BlockCopy(src, 0x1D, buffer3, 0, 0x20);
+      using (Rfc2898DeriveBytes bytes = new Rfc2898DeriveBytes(Password, dst, 0x2710, HashAlgorithmName.SHA256))
+      {
+        buffer4 = bytes.GetBytes(0x20);
+      }
+      return ByteArraysEqual(buffer3, buffer4);
+    }
+
     public static string GetAtHash(string random)
     {
       SHA256Managed hashstring = new SHA256Managed();

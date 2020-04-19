@@ -103,17 +103,7 @@ namespace myop.Controllers
                     if (user == null ) {
                         return new AccessToken {error = "access_denied", error_description="user authentication failed."};
                     }
-                    byte[] buffer4;
-                    byte[] src = Convert.FromBase64String(user.PasswordHash);
-                    byte[] dst = new byte[0x10];
-                    Buffer.BlockCopy(src, 0x0D, dst, 0, 0x10);
-                    byte[] buffer3 = new byte[0x20];
-                    Buffer.BlockCopy(src, 0x1D, buffer3, 0, 0x20);
-                    using (Rfc2898DeriveBytes bytes = new Rfc2898DeriveBytes(PASSWORD, dst, 0x2710, HashAlgorithmName.SHA256))
-                    {
-                        buffer4 = bytes.GetBytes(0x20);
-                    }
-                    if (!Util.ByteArraysEqual(buffer3, buffer4)) {
+                    if (!Util.PasswordEqual(user.PasswordHash, PASSWORD)) {
                         return new AccessToken {error = "access_denied", error_description="user authentication failed."};
                     }
                 }
