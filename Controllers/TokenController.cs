@@ -211,9 +211,8 @@ namespace myop.Controllers
             token=new Token {UserId = USERNAME, AccessToken = random, RefreshToken=refresh, Scope = SCOPE, Iat=DateTime.Now};
             _context.Add(token);
             await _context.SaveChangesAsync();
-            if (client.GrantTypes == "client_credentials") refresh = null;
-            AccessToken access_token=new AccessToken {access_token = random, expires_in=60, refresh_token = refresh, refresh_token_expires_in=3600, id_token = idtoken, token_type="bearer", scope = SCOPE};
-            return access_token;
+            if (client.GrantTypes == "client_credentials") return new AccessToken {access_token = random, expires_in=60, token_type="bearer", scope = SCOPE};
+            else return new AccessToken {access_token = random, expires_in=60, refresh_token = refresh, refresh_token_expires_in= 3600, id_token = idtoken, token_type="bearer", scope = SCOPE};
         }
     }
 }

@@ -106,7 +106,7 @@ namespace myop.Controllers
                 var jwt = new JwtSecurityToken(jwtHeader, jwtPayload);
                 var id_token = new JwtSecurityTokenHandler().WriteToken(jwt);
                 param = "#id_token=" + id_token + param;
-            } else if (RESPONSE_TYPE == "token id_token") {
+            } else if (RESPONSE_TYPE == "token id_token" || RESPONSE_TYPE == "id_token token") {
                 if (client.GrantTypes != "implicit") {
                     return Redirect(REDIRECT_URI + "#error=unsupported_response_type");
                 }
