@@ -50,24 +50,24 @@ namespace myop.Controllers
                     case "token":TOKEN=values[1];break;
                 }
             }
-            var client = await _context.Clients.FindAsync(CLIENT_ID);
-            if (client == null) {
-                return null;
-            }
-            if (client.AccessType == "confidential") {
-                if (client.ClientSecret != CLIENT_SECRET) return null;
-            } else if (client.AccessType == "public") {
-                if (client.GrantTypes != "password" && client.GrantTypes != "authorization_code" && client.GrantTypes != "implicit") return null;
-                if (CLIENT_SECRET != null) return null;
-            } else {
-                return null;
-            }
             string ISS = "https://raspberry.pi/op";
             string SCOPE = null;
             string SUB = null;
             string AUD = CLIENT_ID;
             int IAT = 0;
             bool ACTIVE = false;
+            var client = await _context.Clients.FindAsync(CLIENT_ID);
+            if (client == null) {
+                return new Introspect {active = ACTIVE, iss = ISS};
+            }
+            if (client.AccessType == "confidential") {
+                if (client.ClientSecret != CLIENT_SECRET) return new Introspect {active = ACTIVE, iss = ISS};
+            } else if (client.AccessType == "public") {
+                if (client.GrantTypes != "password" && client.GrantTypes != "authorization_code" && client.GrantTypes != "implicit") return new Introspect {active = ACTIVE, iss = ISS};
+                if (CLIENT_SECRET != null) return new Introspect {active = ACTIVE, iss = ISS};
+            } else {
+                return new Introspect {active = ACTIVE, iss = ISS};
+            }
             var token = await _context.Tokens.FirstOrDefaultAsync(e => e.AccessToken == TOKEN);
             if (token != null) {
                 if (CLIENT_ID == token.ClientId) {
