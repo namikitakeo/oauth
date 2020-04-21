@@ -19,7 +19,7 @@ namespace myop.Controllers
         public string n { get; set; }
         public string e { get; set; }
     }
-    public class Jks
+    public class Keys
     {
         public Key[] keys { get; set; }
     }
@@ -36,12 +36,12 @@ namespace myop.Controllers
 
         // GET: op/keys
         [HttpGet]
-        public async Task<ActionResult<Jks>> doGet()
+        public async Task<ActionResult<Keys>> doGet()
         {
             Key key = new Key {kty = "RSA", kid = "testkey", use = "sig", alg = "RS256", n = "68AgRr2w3WutTMV0k8AK076qtQamauVhRvKcyRrT8GP7FQIJTRLnunmmwR78PC4R868GnfoW54l3FX-DAywtuS1NVrKZpsDDF5bBBD9-k2y8gJfALvVV6RIVsHmWMeulMb6o9OVDC4HktBSJGpaFy2kKNhde5PaWhnoq5lCjnLSCEbfZxTVrTFAaF3Mr4Thww5xm7lnSICYotDycTIe8C5ErsBhJFNX82V40pO8TNU2IDY7Zf_fpsUzI6eOoAxKBY7nUOX8bKf5WMo3-ztYCLoN4Oaf9xmjWT-zjEnsozIctAQ_JjZcofEhqLTKjsVvRIoweUqP9EBfsHn7UkJSTCQ", e = "AQAB"};
-            Jks jks = new Jks {keys = new Key[] {key}};
+            Keys keys = new Keys {keys = new Key[] {key}};
             await _context.SaveChangesAsync();
-            return jks;
+            return keys;
         }
     }
 }
