@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using myop.Models;
 
 namespace myop.Controllers
@@ -26,13 +27,15 @@ namespace myop.Controllers
     public class IntrospectController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly AppSettings _appSettings;
         string CLIENT_ID;
         string CLIENT_SECRET;
         string TOKEN;
 
-        public IntrospectController(ApplicationDbContext  context)
+        public IntrospectController(ApplicationDbContext context, IOptions<AppSettings> optionsAccessor)
         {
             _context = context;
+            _appSettings = optionsAccessor.Value;
         }
 
         // POST: op/introspect
@@ -50,7 +53,7 @@ namespace myop.Controllers
                     case "token":TOKEN=values[1];break;
                 }
             }
-            string ISS = "https://raspberry.pi/op";
+            string ISS = _appSettings.Myop.BaseUrl+"/op";
             string SCOPE = null;
             string SUB = null;
             string AUD = CLIENT_ID;

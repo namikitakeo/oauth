@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Options;
 using System.Text;
 
 namespace myop.Controllers
@@ -33,6 +34,7 @@ namespace myop.Controllers
     public class TokenController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly AppSettings _appSettings;
         string CLIENT_ID;
         string CLIENT_SECRET;
         string GRANT_TYPE;
@@ -42,9 +44,10 @@ namespace myop.Controllers
         string CODE;
         string REFRESH_TOKEN;
         string NONCE;
-        public TokenController(ApplicationDbContext context)
+        public TokenController(ApplicationDbContext context, IOptions<AppSettings> optionsAccessor)
         {
             _context = context;
+            _appSettings = optionsAccessor.Value;
         }
         // POST: op/token
         [HttpPost]
@@ -122,7 +125,7 @@ namespace myop.Controllers
                     new Claim(JwtRegisteredClaimNames.Sub, USERNAME),
                     new Claim(JwtRegisteredClaimNames.Nonce, NONCE)
                     };
-                    idtoken=Util.GetIdToken(claims, CLIENT_ID);
+                    idtoken=Util.GetIdToken(claims, CLIENT_ID, _appSettings.Myop.BaseUrl);
                 }
                 string t="openid";
                 if (SCOPE != null) {

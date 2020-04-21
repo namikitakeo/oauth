@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using myop.Models;
 
 namespace myop.Controllers
@@ -26,16 +27,18 @@ namespace myop.Controllers
     public class DiscoveryController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        public DiscoveryController(ApplicationDbContext context)
+        private readonly AppSettings _appSettings;
+        public DiscoveryController(ApplicationDbContext context, IOptions<AppSettings> optionsAccessor)
         {
             _context = context;
+            _appSettings = optionsAccessor.Value;
         }
 
         // GET: op/.well-known/openid-configuration
         [HttpGet]
         public async Task<ActionResult<Discovery>> doGet()
         {
-            Discovery discovery = new Discovery {issuer = "https://raspberry.pi/op", grant_types_supported = new string[] {"authorization_code","implicit","client_credentials","password","refresh_token"}, response_types_supported = new string[] {"code","id_token","token id_token"}, authorization_endpoint = "https://raspberry.pi/op/auth", token_endpoint = "https://raspberry.pi/op/token", introspection_endpoint = "https://raspberry.pi/op/introspect", jwks_uri = "https://raspberry.pi/op/keys"};
+            Discovery discovery = new Discovery {issuer = _appSettings.Myop.BaseUrl+"/op", grant_types_supported = new string[] {"authorization_code","implicit","client_credentials","password","refresh_token"}, response_types_supported = new string[] {"code","id_token","token id_token"}, authorization_endpoint = _appSettings.Myop.BaseUrl+"/op/auth", token_endpoint = _appSettings.Myop.BaseUrl+"/op/token", introspection_endpoint = _appSettings.Myop.BaseUrl+"/op/introspect", jwks_uri = _appSettings.Myop.BaseUrl+"/op/keys"};
             await _context.SaveChangesAsync();
             return discovery;
         }

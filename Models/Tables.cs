@@ -58,7 +58,7 @@ namespace myop.Models
       return Convert.ToBase64String(sixteen_bytes).Trim('=');
     }
 
-    public static string GetIdToken(Claim[] claims, string client_id)
+    public static string GetIdToken(Claim[] claims, string client_id, string base_url)
     {
       var pemStr = System.IO.File.ReadAllText(@"./private.pem");
       var base64 = pemStr
@@ -74,7 +74,7 @@ namespace myop.Models
       var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
       var jwtHeader = new JwtHeader(creds);
       var jwtPayload = new JwtPayload(
-      issuer: "https://raspberry.pi/op",
+      issuer: base_url+"/op",
         audience: client_id,
         claims: claims,
         notBefore: DateTime.Now,
@@ -97,6 +97,17 @@ namespace myop.Models
 //        protected override void OnConfiguring(DbContextOptionsBuilder options)
 //            => options.UseSqlite("Data Source=app.db");
   }
+
+  public class AppSettings
+  {
+    public Myop Myop { get; set; }
+  }
+
+  public class Myop
+  {
+    public string BaseUrl { get; set; }
+  }
+
   public class Client
   {
     [Key]

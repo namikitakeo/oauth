@@ -37,6 +37,7 @@ namespace myop
                 options.JsonSerializerOptions.IgnoreNullValues = true;
             });
            services.AddRazorPages();
+           services.Configure<AppSettings>(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

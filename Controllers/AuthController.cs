@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
 using myop.Models;
 
 namespace myop.Controllers
@@ -21,6 +22,7 @@ namespace myop.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly AppSettings _appSettings;
         string CLIENT_ID;
         string RESPONSE_TYPE;
         string REDIRECT_URI;
@@ -28,9 +30,10 @@ namespace myop.Controllers
         string STATE;
         string NONCE;
         string AT_HASH;
-        public AuthController(ApplicationDbContext context)
+        public AuthController(ApplicationDbContext context, IOptions<AppSettings> optionsAccessor)
         {
             _context = context;
+            _appSettings = optionsAccessor.Value;
         }
 
         // GET: op/auth
@@ -87,7 +90,7 @@ namespace myop.Controllers
                 new Claim(JwtRegisteredClaimNames.Sub, User.Identity.Name),
                 new Claim(JwtRegisteredClaimNames.Nonce, NONCE)
                 };
-                var id_token = Util.GetIdToken(claims, CLIENT_ID);
+                var id_token = Util.GetIdToken(claims, CLIENT_ID, _appSettings.Myop.BaseUrl);
                 param = "#id_token=" + id_token + param;
             } else if (RESPONSE_TYPE == "token id_token" || RESPONSE_TYPE == "id_token token") {
                 if (client.GrantTypes != "implicit") {
@@ -107,7 +110,7 @@ namespace myop.Controllers
                 new Claim(JwtRegisteredClaimNames.AtHash, AT_HASH),
                 new Claim(JwtRegisteredClaimNames.Nonce, NONCE)
                 };
-                var id_token = Util.GetIdToken(claims, CLIENT_ID);
+                var id_token = Util.GetIdToken(claims, CLIENT_ID, _appSettings.Myop.BaseUrl);
                 param = "#access_token=" + random + "&token_type=bearer&id_token=" + id_token + param;
             } else {
                 return Redirect(REDIRECT_URI + "#error=unsupported_response_type&error_description=the response_type value is not supported.");
