@@ -64,6 +64,7 @@ namespace myop.Controllers
                 }
                 var code = new Code {CodeId = random, UserId = User.Identity.Name, ClientId = CLIENT_ID, Nonce = NONCE, Iat=DateTime.Now};
                 _context.Add(code);
+                await _context.SaveChangesAsync();
                 param = "?code=" + random + param;
             } else if (RESPONSE_TYPE == "token") {
                 if (client.GrantTypes != "implicit") {
@@ -76,6 +77,7 @@ namespace myop.Controllers
                 }
                 access_token = new Token {UserId = User.Identity.Name, AccessToken = random, ClientId = CLIENT_ID, Scope = SCOPE, Iat=DateTime.Now};
                 _context.Add(access_token);
+                await _context.SaveChangesAsync();
                 param = "#access_token=" + random + "&token_type=bearer" + param;
             } else if (RESPONSE_TYPE == "id_token") {
                 if (client.GrantTypes != "implicit") {
@@ -98,6 +100,7 @@ namespace myop.Controllers
                 }
                 access_token = new Token {UserId = User.Identity.Name, AccessToken = random, ClientId = CLIENT_ID, Scope = SCOPE, Iat=DateTime.Now};
                 _context.Add(access_token);
+                await _context.SaveChangesAsync();
                 AT_HASH = Util.GetAtHash(random);
                 var claims = new[] {
                 new Claim(JwtRegisteredClaimNames.Sub, User.Identity.Name),
@@ -109,7 +112,6 @@ namespace myop.Controllers
             } else {
                 return Redirect(REDIRECT_URI + "#error=unsupported_response_type&error_description=the response_type value is not supported.");
             }
-            await _context.SaveChangesAsync();
             return Redirect(REDIRECT_URI + param);
         }
     }
