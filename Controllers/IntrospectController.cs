@@ -78,7 +78,7 @@ namespace myop.Controllers
                     SUB = token.UserId;
                     int unixTimestamp = (int)(DateTime.Now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                     IAT = (int)(token.Iat.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                    if (unixTimestamp - IAT < 60) ACTIVE = true;
+                    if (unixTimestamp - IAT < _appSettings.Myop.AccessTokenExpiration) ACTIVE = true;
                 } else {
                     IAT=0;
                 }
@@ -86,7 +86,7 @@ namespace myop.Controllers
             if (IAT==0) {
                 return new Introspect {active = ACTIVE, iss = ISS};
             } else {
-                return new Introspect {active = ACTIVE, scope = SCOPE, exp = IAT + 60, iat = IAT, sub = SUB, aud = AUD, iss = ISS};
+                return new Introspect {active = ACTIVE, scope = SCOPE, exp = IAT + _appSettings.Myop.AccessTokenExpiration, iat = IAT, sub = SUB, aud = AUD, iss = ISS};
             }
         }
     }

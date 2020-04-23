@@ -106,6 +106,8 @@ namespace myop.Models
   public class Myop
   {
     public string BaseUrl { get; set; }
+    public int AccessTokenExpiration { get; set; }
+    public int RefreshTokenExpiration { get; set; }
   }
 
   public class Client

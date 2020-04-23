@@ -87,7 +87,7 @@ namespace myop.Controllers
                     if (CLIENT_ID != refresh_token.ClientId) return new AccessToken {error = "invalid_request", error_description = "client_id is not valid."};
                     int unixTimestamp = (int)(DateTime.Now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                     int iat = (int)(refresh_token.Iat.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                    if (unixTimestamp - iat > 3600) {
+                    if (unixTimestamp - iat > _appSettings.Myop.RefreshTokenExpiration) {
                         return new AccessToken {error = "access_denied", error_description="the refresh_token is not valid."};
                     }
                     USERNAME = refresh_token.UserId;
@@ -159,9 +159,9 @@ namespace myop.Controllers
             _context.Add(token);
             await _context.SaveChangesAsync();
             if (client.GrantTypes == "client_credentials") {
-                return new AccessToken {access_token = random, expires_in=60, token_type="bearer", scope = SCOPE};
+                return new AccessToken {access_token = random, expires_in = _appSettings.Myop.AccessTokenExpiration, token_type = "bearer", scope = SCOPE};
             } else {
-                return new AccessToken {access_token = random, expires_in=60, refresh_token = refresh, refresh_token_expires_in= 3600, id_token = idtoken, token_type="bearer", scope = SCOPE};
+                return new AccessToken {access_token = random, expires_in = _appSettings.Myop.AccessTokenExpiration, refresh_token = refresh, refresh_token_expires_in = _appSettings.Myop.RefreshTokenExpiration, id_token = idtoken, token_type="bearer", scope = SCOPE};
             }
         }
     }
